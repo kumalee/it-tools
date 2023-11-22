@@ -6,20 +6,26 @@ on:
     branches:
       - main
 
+# Cancel previous runs of the same workflow on the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  ci:
+  web:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
       - run: corepack enable
+
       - uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: 'pnpm'
-
+  
       - name: Install dependencies
-        run: pnpm i
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run linters
         run: pnpm lint
@@ -32,3 +38,33 @@ jobs:
 
       - name: Build the app
         run: pnpm build
+
+  rustfmt:
+    name: Rust Formatting
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            changes:
+              - 'src-tauri/src/**'
+              - 'src-tauri/Cargo.toml'
+              - 'src-tauri/Cargo.lock'
+
+      - name: Rust setup
+        if: steps.filter.outputs.changes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        if: steps.filter.outputs.changes == 'true'
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Run rustfmt
+        if: steps.filter.outputs.changes == 'true'
+        run: cargo fmt --all -- --check
