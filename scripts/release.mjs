@@ -47,9 +47,18 @@ try {
   await $`git commit -m "docs(changelog): update changelog for ${version}"`;
   consola.success('Changelog changes committed');
 
+  consola.info('Update version for Tauri App');
+  await $`jq --arg version "${version}" '.package.version = $version' ./src-tauri/tauri.conf.json > tmp.json`;
+  await $`mv tmp.json ./src-tauri/tauri.conf.json`;
+  await $`git add ./src-tauri/tauri.conf.json && git commit -m "chore(tauri): update ${version} for Tauri App"`;
+  console.info(`Tauri App version updated to: ${version}`);
+
   consola.info('Creating version and tag');
-  await $`npm version ${version} -m "chore(version): release ${version}"`;
+  await $`npm version ${version} --no-git-tag-version`;
+  await $`git add package.json && git commit -m "chore(version): release v${version}"`;
+  await $`git tag v${version}`;
   consola.info('Npm version released with tag');
+
 } catch (error) {
   consola.error(error);
   consola.info('Aborting');
