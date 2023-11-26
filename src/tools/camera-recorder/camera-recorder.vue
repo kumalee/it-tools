@@ -3,6 +3,8 @@ import _ from 'lodash';
 
 import { useMediaRecorder } from './useMediaRecorder';
 
+import { isTauri } from '@/utils/isTauri';
+
 interface Media { type: 'image' | 'video'; value: string; createdAt: Date }
 
 const {
@@ -102,6 +104,11 @@ function downloadMedia({ type, value, createdAt }: Media) {
 
 <template>
   <div>
+    <c-card v-if="isTauri">
+      You're using desktop app version of IT - TOOLS which build by Tauri.
+      Unfortunately it does not support video recording by default.
+    </c-card>
+
     <c-card v-if="!isSupported">
       Your browser does not support recording video from camera
     </c-card>
