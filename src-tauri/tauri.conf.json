@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "it-tools",
-    "version": "0.1.0"
+    "version": "2023.11.27-350a7fe"
   },
   "tauri": {
     "allowlist": {
